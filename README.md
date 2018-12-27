@@ -65,6 +65,9 @@ Chat Meteor 是一款基于 swoole + Async Redis 打造的 WebSocket 聊天引�
 #### 创建群组
 
 Request: 
+
+	- users: 初始成员列表
+
 ```json
 {
 	"type": "http",
@@ -73,7 +76,7 @@ Request:
 	"args": {
 		"group_name": "dns交流群",
 		"users": [
-			1,2,3,4,5,6  // 初始成员列表
+			1,2,3,4,5,6
 		]
 
 	}
@@ -81,13 +84,16 @@ Request:
 ```
 
 Response:
+
+	- group_id = substr( md5(group_name), 0, 6 )
+
 ```json
 {
 	"code": 200,
 	"message": "创建成功",
 	"data": {
 		"group_name":   "圣诞交流群",
-		"group_id": "abcdef" // group_id = substr( md5(group_name), 0, 6 )
+		"group_id": "abcdef"
 	}
 }
 ```
@@ -95,6 +101,7 @@ Response:
 #### 加入群组
 
 Request: 
+
 ```json
 {
 	"type": "http",
@@ -109,6 +116,7 @@ Request:
 ```
 
 Response:
+
 ```json
 {
     "code": 200,
@@ -124,6 +132,8 @@ Response:
 #### 获取群组列表
 
 Request:
+	
+	- is_active: true, 只显示成员数 > 2 (活跃)的群组
 
 ```json
 {
@@ -131,12 +141,13 @@ Request:
 	"class": "group",
 	"method": "list",
 	"args": {
-		"is_active": true // true: 只显示成员数 > 2 (活跃)的群组
+		"is_active": true
 	}
 }
 ```
 
 Response:
+
 ```json
 {
 	"code": 200,
@@ -247,7 +258,7 @@ Response:
 	"type": "ws",
 	"categroy": "group",
 	"args": {
-		"from_group": "barewd", // group_id
+		"from_group": "barewd",
 		"from_user": 10,
 		"message": "hello，大家好！"
 	}
