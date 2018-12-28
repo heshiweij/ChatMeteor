@@ -61,7 +61,7 @@ class WebSocket
      *
      * @var string
      */
-    const SYS_LOG_DIRECTORY = '/var/log/chat-meteor';
+    const SYS_LOG_DIRECTORY = '/var/log/chat-meteor/server';
 
     /**
      * WebSocket instance

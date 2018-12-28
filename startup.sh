@@ -85,7 +85,7 @@ if [ $? -eq 0 ]; then
 fi
 
 # check system log directory, if not exists, make it
-system_log_dir='/var/log/chat-meteor'
+system_log_dir='/var/log/chat-meteor/server'
 if [ ! -d ${system_log_dir} ]; then
 	mkdir -p ${system_log_dir}
 fi

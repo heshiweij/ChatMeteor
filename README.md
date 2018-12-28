@@ -13,19 +13,17 @@ Chat Meteor 是一款基于 Swoole + Async Redis 打造的高性能 WebSocket �
 - 通过 shell 识别 cpu cores，智能开启工作进程
 - 协程异步访问各个客户端，实现高性能
 - 支持集群部署，轻松应对高并发场景
+- 监测健康状态检查
 
 ## TodoList
 
-- Contract
-- Code Optimize
+- Code Optimize: IOC & Facade & Contract
 - Redis Replication
 - 持久化聊天记录
-- 离线聊天记录
+- 离线记录
 - 日志切割
 - 故障平滑重启脚本
-- 进程健康检查
-- Nginx 负载均衡
-- Redis 使用率报警
+- Redis 监控
 - Web Demo
 
 ## 安装
@@ -57,16 +55,21 @@ Chat Meteor 是一款基于 Swoole + Async Redis 打造的高性能 WebSocket �
 	> cd ChatMeteor
 	> composer install
 	> bash ./startup.sh <Your IP> <Your Port>
+	
+	optional:
+	> bash ./monitor.sh <Your Port>
 
 ### 日志
 
-	- /var/log/chat-meter/log # 系统日志
-	- ./storage/logs/chat<date>.log # 业务日志
-
-
+	- /var/log/chat-meter/server/<date>.log # system log
+	- /var/log/chat-meter/monitor/<date>.log # monitor log
+	- <Project>/storage/logs/chat<date>.log # server log
+	
 ## 集群支持
 
-ChatMeteor 应用不存储任何业务数据，可以很容易实现集群部署以支持高并发场景。
+ChatMeteor 应用服务器不存储任何业务数据，可以轻松实现集群部署以支持高并发场景。
+
+nginx config:
 
 ```
 upstream stream_pool {
