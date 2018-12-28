@@ -61,7 +61,7 @@ class WebSocket
      *
      * @var string
      */
-    const SYS_LOG_DIRECTORY = '/var/log/chat-meteor/server';
+    const SYS_LOG_DIRECTORY = '/var/log/chat-meteor/system';
 
     /**
      * WebSocket instance
@@ -78,6 +78,7 @@ class WebSocket
 
         $this->initializeSettings();
 
+        $this->ws->on('start', [$this, 'onStart']);
         $this->ws->on('workerStart', [$this, 'onWorkerStart']);
 
         $this->ws->on('open', [$this, 'onOpen']);
@@ -109,7 +110,17 @@ class WebSocket
     }
 
     /**
-     * process start (in worker process)
+     * master process start(in master process)
+     *
+     * @param \Swoole\Server $server
+     */
+    function onStart(Swoole\Server $server)
+    {
+        swoole_set_process_name('chat-meteor');
+    }
+
+    /**
+     * worker process start (in worker process)
      *
      * @param \Swoole\WebSocket\Server $server
      * @param $request

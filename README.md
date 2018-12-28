@@ -10,10 +10,11 @@ Chat Meteor 是一款基于 Swoole + Async Redis 打造的高性能 WebSocket �
 
 - 简单轻量，没有借助第三方 MVC 框架
 - 无需掌握 swoole 即可构建聊天应用
-- 通过 shell 识别 cpu cores，智能开启工作进程
+- 智能识别 cpu cores，开启工作进程
 - 协程异步访问各个客户端，实现高性能
 - 支持集群部署，轻松应对高并发场景
-- 监测健康状态检查
+- 进程健康状态检查
+- 一键平滑重启
 
 ## TodoList
 
@@ -22,7 +23,6 @@ Chat Meteor 是一款基于 Swoole + Async Redis 打造的高性能 WebSocket �
 - 持久化聊天记录
 - 离线记录
 - 日志切割
-- 故障平滑重启脚本
 - Redis 监控
 - Web Demo
 
