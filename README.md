@@ -8,10 +8,10 @@ Chat Meteor 是一款基于 swoole + Async Redis 打造的 WebSocket 聊天引�
 
 ## 特性
 
-- 简单易懂，没有借助第三方框架
+- 简单易懂，没有借助第三方 MVC 框架
 - 不需要掌握 swoole 即可构建聊天应用
 - 通过 shell 识别 cpu cores，智能开启工作进程
-- 协程异步访问各客户端，实现高性能
+- 协程异步访问各个客户端，实现高性能
 
 ## TodoList
 
@@ -50,13 +50,41 @@ Chat Meteor 是一款基于 swoole + Async Redis 打造的 WebSocket 聊天引�
 
 ### 部署
 
-	- 克隆代码
-	- 执行 bash ./startup.sh <Your IP> <Your Port>
+	> git clone <repository>
+	> cd ChatMeteor
+	> composer install
+	> bash ./startup.sh <Your IP> <Your Port>
 
 ### 日志
-	
-	- ./storage/logs/chat<date>.log
 
+	- /var/log/chat-meter/log # 系统日志
+	- ./storage/logs/chat<date>.log # 业务日志
+
+
+## 集群支持
+
+ChatMeteor 应用不存储任何业务数据，可以很容易实现集群部署以支持高并发场景。
+
+```
+upstream stream_pool {
+    server 192.168.0.101:8001 weight=1;
+    server 192.168.3.102:8002 weight=1;
+    server 192.168.3.103:8003 weight=1;
+}
+
+server {
+    listen 8000;
+
+    server_name www.example.com$;
+
+    location / {
+        proxy_pass http://stream_pool;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
 
 ## 服务接口
 

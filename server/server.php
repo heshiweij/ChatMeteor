@@ -15,21 +15,24 @@ use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 use App\Lib\Table\SwooleTableClient;
 
-// get host by cli args
+// get 'host' by cli args
 if (isset($argv[1]) && ! empty($argv[1])) {
     define('HOST', $argv[1]);
 }
 
-// get port by cli args
+// get 'port' by cli args
 if (isset($argv[2]) && ! empty($argv[2])) {
     define('PORT', $argv[2]);
 }
 
-// get cpu core num by cli args
+// get 'cpu core num' by cli args
 if (isset($argv[3]) && ! empty($argv[3])) {
     define('CPU_CORES', $argv[3]);
 }
 
+/**
+ * Web Socket & Http Server
+ */
 class WebSocket
 {
     /**
@@ -52,6 +55,13 @@ class WebSocket
      * @var integer
      */
     const WORKER_NUM = 2;
+
+    /**
+     * System runtime log path
+     *
+     * @var string
+     */
+    const SYS_LOG_DIRECTORY = '/var/log/chat-meteor';
 
     /**
      * WebSocket instance
@@ -91,6 +101,8 @@ class WebSocket
             //'reactor_num'     => 2,
             'worker_num'      => defined('CPU_CORES') ? CPU_CORES * 2 : self::WORKER_NUM,
             'task_worker_num' => defined('CPU_CORES') ? CPU_CORES * 4 : self::WORKER_NUM * 2,
+            'daemonize'       => true,
+            'log_file'        => self::SYS_LOG_DIRECTORY.'/'.date('Y-m-d').'.log',
             //'max_request'     => 1000,
             //'max_conn'        => 1000,
         ]);
@@ -113,8 +125,12 @@ class WebSocket
         if ($workerId == 0) {
             // can not run async client in task worker
             // so worker = 0 must be worker ,not task worker
-            RedisClient::instance()->doSomething('del', [RedisKeys::USER_ONLINE_LIST]);
-            RedisClient::instance()->doSomething('del', [RedisKeys::USER_ONLINE_LIST_REVERSE]);
+            $redis = RedisClient::instance();
+
+            if ($redis != null) {
+                $redis->doSomething('del', [RedisKeys::USER_ONLINE_LIST]);
+                $redis->doSomething('del', [RedisKeys::USER_ONLINE_LIST_REVERSE]);
+            }
         }
 
         if (ConfigAdapter::isDebug()) {

@@ -4,7 +4,7 @@
 #Author:           svenhe
 #QQ:               137233130
 #Filename:         startup.sh
-#URL:              http://github.com/heshiweij/ChartEngine
+#URL:              https://github.com/heshiweij/ChatMeteor
 #Description:      To startup Chat Engine server
 #Copyright:        2018 All Right Reserved
 #
@@ -33,17 +33,17 @@
 # check php version
 php_major_version=`php -v|egrep -o "[[:digit:]]+"|head -1`
 
-[ $php_major_version -lt 7 ] && echo "The current version of PHP doesn\'t support it" && exit 1
+[ ${php_major_version} -lt 7 ] && echo -e echo -e "\033[31m The current version of PHP doesn\'t support it \033[0m" && exit 1
 
 # check ip format
 if [[ ! $1 =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-	echo "The IP address is incorrect"
+	echo -e "The IP  \033[31m address \033[0m is incorrect"
 	exit 2
 fi
 
 # check port format
 if [[ ! $2 =~ ^[0-9]{2,5}$ ]]; then
-	echo "The Port is incorrect"
+	echo -e "The \033[31m Port \033[0m is incorrect"
 	exit 3
 fi
 
@@ -51,16 +51,16 @@ fi
 netstat -anp|grep -q $2 &> /dev/null
 
 if [ $? -eq 0 ]; then
-	echo "Port: $2 is already in use. "
+	echo -e "Port: \033[31m $2 \033[0m is already in use. "
 
-	process_info=`netstat -anp|grep $2|head -1|tr -s " "|cut -d" " -f7`
-	echo "The Pid/Process is: $process_info"
+	process_info=`netstat -anp|grep $2|grep LISTEN|head -1|tr -s " "|cut -d" " -f7`
+	echo -e "The Pid/Process is: \033[31m $process_info \033[0m"
 	echo ""
 
 	read -p "Would you kill it and continue ? (Y/y/N/n)" is_kill
 
-	if [[ $is_kill =~ ^[Yy] ]]; then
-		pid=`echo $process_info|cut -d"/" -f1`
+	if [[ ${is_kill} =~ ^[Yy] ]]; then
+		pid=`echo ${process_info}|cut -d"/" -f1`
 #		echo "pid" $pid
 #		exit -1
 
@@ -71,7 +71,14 @@ if [ $? -eq 0 ]; then
 	fi
 fi
 
+# check system log directory, if not exists, make it
+system_log_dir='/var/log/chat-meteor'
+if [ ! -d ${system_log_dir} ]; then
+	mkdir -p ${system_log_dir}
+fi
 
 # start up by cpu nums
 cpu_cores=`cat /proc/cpuinfo |grep 'cores'|cut -d" " -f3`
-php ./server/server.php $1 $2 $cpu_cores
+php ./server/server.php $1 $2 ${cpu_cores}
+
+echo -e "Startup \033[32m success \033[0m & Program running in daemon..."
