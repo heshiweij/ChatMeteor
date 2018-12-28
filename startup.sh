@@ -30,6 +30,19 @@
 #                    佛祖保佑        永无BUG
 #****************************************************
 
+# check environment
+php -v &> /dev/null; [ $? -ne 0 ] && echo -e echo -e "\033[31m Please install PHP7.0+ first \033[0m" && exit 1
+
+swoole_major_version=`php -r 'echo SWOOLE_VERSION;'|egrep -o "[[:digit:]]+"|head -1`
+[ ${swoole_major_version} -lt 2 ] && echo -e echo -e "\033[31m The current version of Swoole doesn\'t support it \033[0m" && exit 1
+
+php --ri "swoole" |grep -q 'async redis client => enabled'
+
+if [ $? -ne 0 ]; then
+	echo -e echo -e "\033[31m You must install enable swoole async redis first! \033[0m"
+	exit 1
+fi
+
 # check php version
 php_major_version=`php -v|egrep -o "[[:digit:]]+"|head -1`
 

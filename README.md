@@ -4,21 +4,22 @@
 
 ## 简介
 
-Chat Meteor 是一款基于 swoole + Async Redis 打造的 WebSocket 聊天引擎，支持单聊、群聊，创建群组、管理群组等。通过 HTTP 和 WS 对外提供服务。
+Chat Meteor 是一款基于 Swoole + Async Redis 打造的高性能 WebSocket 聊天引擎，支持单聊、群聊，创建群组、管理群组等。通过 HTTP 和 WS 对外提供服务。
 
 ## 特性
 
-- 简单易懂，没有借助第三方 MVC 框架
-- 不需要掌握 swoole 即可构建聊天应用
+- 简单轻量，没有借助第三方 MVC 框架
+- 无需掌握 swoole 即可构建聊天应用
 - 通过 shell 识别 cpu cores，智能开启工作进程
 - 协程异步访问各个客户端，实现高性能
+- 支持集群部署，轻松应对高并发场景
 
 ## TodoList
 
 - Contract
 - Code Optimize
 - Redis Replication
-- 持久化聊天记录到 DB
+- 持久化聊天记录
 - 离线聊天记录
 - 日志切割
 - 故障平滑重启脚本
@@ -34,6 +35,8 @@ Chat Meteor 是一款基于 swoole + Async Redis 打造的 WebSocket 聊天引�
 	- swoole2.1+
 	- redis 3.2+
 ## 配置
+
+	- ./App/Config/config.yaml
 
 	debug: true
     redis:
