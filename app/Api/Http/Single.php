@@ -11,50 +11,71 @@ namespace App\Api\Http;
 use App\Lib\Log\LogClient;
 use App\Lib\MySql\MySqlClient;
 use App\Lib\Redis\RedisClient;
+use App\Lib\Redis\RedisKeys;
 use App\Lib\Table\SwooleTableClient;
+use App\Traits\Validation;
 use App\Utils\ResponseUtil;
 
 class Single
 {
+    use Validation;
+
     /**
+     * 查看某个用户是否在线
+     *
      * @param $args
      * @return array
-     * @throws \App\Exceptions\ResourceConnectException
+     * @throws \App\Exceptions\BadRequestException
+     * @throws \App\Exceptions\ParameterIllegalException
      */
-    public function index($args)
+    public function online($args)
     {
-        //$name = RedisClient::instance()->doSomething('mget', [
-        //    ['name', 'haha'],
-        //]);
-        //
-        //var_dump($name);
+        // 检查参数
+        $this->validateArguments($args, 'user_id');
 
-        //phpinfo();
+        $userId = $args['user_id'];
 
-        //$result = MySqlClient::instance()->query("select * from single");
+        $value = get_value_hash_from_redis(RedisKeys::USER_ONLINE_LIST_REVERSE, $userId);
 
-        //var_dump($result);
-
-        /*
-        LogClient::instance()->write('single', [
-            'haha',
-            'haha2',
-            'xixi' => [
-                'ni' => [
-                    '1',
-                    [
-                        '1'  => '555',
-                        '12' => '555',
-                        '13' => '555',
-                    ],
-                ],
-            ],
+        return ResponseUtil::success('获取用户在线状态成功', [
+            'online' => ! empty($value),
         ]);
-        */
+    }
 
-        return ResponseUtil::success("成功了", [
-            'name' => 'hsw',
-            'args' => $args,
-        ]);
+    /**
+     * 获得当前用户所在的群
+     *
+     * @param $args
+     * @return array
+     * @throws \App\Exceptions\BadRequestException
+     * @throws \App\Exceptions\ParameterIllegalException
+     */
+    public function group($args)
+    {
+        // 检查参数
+        $this->validateArguments($args, 'user_id');
+
+        $userId = $args['user_id'];
+
+        $groups = get_keys_from_redis(RedisKeys::GROUP_PREFIX.str_repeat('?', 6));
+
+        $result = [];
+
+        foreach ($groups as $group) {
+
+            $array = explode('_', $group);
+
+            if (count($array) === 2) {
+                $groupId = $array[1];
+
+                $members = get_all_list_element_from_redis(RedisKeys::GROUP_USER_LIST_PREFIX.$groupId);
+
+                if (is_array($members) && in_array($userId, $members)) {
+                    $result[] = $groupId;
+                }
+            }
+        }
+
+        return ResponseUtil::success('获取用户所在的群组成功', $result);
     }
 }

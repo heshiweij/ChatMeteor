@@ -102,7 +102,7 @@ class WebSocket
             //'reactor_num'     => 2,
             'worker_num'      => defined('CPU_CORES') ? CPU_CORES * 2 : self::WORKER_NUM,
             'task_worker_num' => defined('CPU_CORES') ? CPU_CORES * 4 : self::WORKER_NUM * 2,
-            'daemonize'       => true,
+            //'daemonize'       => true,
             'log_file'        => self::SYS_LOG_DIRECTORY.'/'.date('Y-m-d').'.log',
             //'max_request'     => 1000,
             //'max_conn'        => 1000,

@@ -11,30 +11,32 @@ namespace App\Api\Ws;
 use App\Exceptions\BadRequestException;
 use App\Lib\Redis\RedisClient;
 use App\Lib\Redis\RedisKeys;
+use App\Traits\Validation;
 use App\Utils\ResponseUtil;
 
 class Setting
 {
+    use Validation;
+
     /**
      * bind user id with fd
      *
      * @param $args
      * @throws \App\Exceptions\BadRequestException
+     * @throws \App\Exceptions\ParameterIllegalException
      */
     public function bind($args)
     {
         // 检查参数
-        if (! isset($args['user_id']) || empty($args['user_id'])) {
-            throw new BadRequestException('Argument is not valid: miss user_id', ResponseUtil::HTTP_BAD_REQUEST);
-        }
+        $this->validateArguments($args, 'user_id');
 
         $fd     = $_SERVER['frame']->fd;
         $userId = $args['user_id'];
 
         // 正向
-        RedisClient::instance()->doSomething('hset', [RedisKeys::USER_ONLINE_LIST, $fd, $userId]);
+        set_value_hash_to_redis(RedisKeys::USER_ONLINE_LIST, $fd, $userId);
 
         // 反向
-        RedisClient::instance()->doSomething('hset', [RedisKeys::USER_ONLINE_LIST_REVERSE, $userId, $fd]);
+        set_value_hash_to_redis(RedisKeys::USER_ONLINE_LIST_REVERSE, $userId, $fd);
     }
 }

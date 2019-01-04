@@ -30,10 +30,10 @@
 #                    佛祖保佑        永无BUG
 #****************************************************
 
-echo 'loading...'
+echo 'killing...'
 
 pid=`pidof chat-meteor`
 
-kill -10 $pid
+kill -9 $pid
 
 

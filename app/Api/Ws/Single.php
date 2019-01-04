@@ -11,26 +11,25 @@ namespace App\Api\Ws;
 use App\Exceptions\BadRequestException;
 use App\Lib\Redis\RedisClient;
 use App\Lib\Redis\RedisKeys;
+use App\Traits\Validation;
 use App\Utils\ResponseUtil;
 
 class Single
 {
+    use Validation;
+
     /**
      * send single message
      *
      * @param $args
      * @throws \App\Exceptions\BadRequestException
+     * @throws \App\Exceptions\ParameterIllegalException
      */
     public function send($args)
     {
         // 检查参数
-        if (! isset($args['to_user']) || empty($args['to_user'])) {
-            throw new BadRequestException('Argument is not valid: miss to_user', ResponseUtil::HTTP_BAD_REQUEST);
-        }
-
-        if (! isset($args['message']) || empty($args['message'])) {
-            throw new BadRequestException('Argument is not valid: miss message', ResponseUtil::HTTP_BAD_REQUEST);
-        }
+        $this->validateArguments($args, 'to_user');
+        $this->validateArguments($args, 'message');
 
         $server = $_SERVER['server'];
 
@@ -38,9 +37,9 @@ class Single
 
         $toUserId = $args['to_user'];
 
-        $fromUserId = RedisClient::instance()->doSomething('hget', [RedisKeys::USER_ONLINE_LIST, $fd]);
+        $fromUserId = get_value_hash_from_redis(RedisKeys::USER_ONLINE_LIST, $fd);
 
-        $fd = RedisClient::instance()->doSomething('hget', [RedisKeys::USER_ONLINE_LIST_REVERSE, $toUserId]);
+        $fd = get_value_hash_from_redis(RedisKeys::USER_ONLINE_LIST_REVERSE, $toUserId);
 
         if (intval($fd) > 0) {
             $server->push($fd, json_encode([

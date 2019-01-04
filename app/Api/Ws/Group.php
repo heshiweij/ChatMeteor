@@ -11,33 +11,30 @@ namespace App\Api\Ws;
 use App\Exceptions\BadRequestException;
 use App\Lib\Redis\RedisClient;
 use App\Lib\Redis\RedisKeys;
+use App\Traits\Validation;
 use App\Utils\ResponseUtil;
 
 class Group
 {
+    use Validation;
+
     /**
      * send group message
      *
      * @param $args
      * @throws \App\Exceptions\BadRequestException
+     * @throws \App\Exceptions\ParameterIllegalException
      */
     public function send($args)
     {
         // 检查参数
-        if (! isset($args['group_id']) || empty($args['group_id'])) {
-            throw new BadRequestException('Argument is not valid: miss group_id', ResponseUtil::HTTP_BAD_REQUEST);
-        }
-
-        if (! isset($args['message']) || empty($args['message'])) {
-            throw new BadRequestException('Argument is not valid: miss message', ResponseUtil::HTTP_BAD_REQUEST);
-        }
+        $this->validateArguments($args, 'group_id');
+        $this->validateArguments($args, 'message');
 
         // 检查群组是否存在
         $groupId = $args['group_id'];
 
-        $exists = RedisClient::instance()->doSomething('exists', [RedisKeys::GROUP_PREFIX.$groupId,]);
-
-        if (! $exists) {
+        if (! exists_key_redis(RedisKeys::GROUP_PREFIX.$groupId)) {
             throw new BadRequestException('Group is not exists', ResponseUtil::HTTP_ERROR);
         }
 
@@ -48,7 +45,7 @@ class Group
 
         $fromFd = $_SERVER['frame']->fd;
 
-        $fromUserId = $this->getUserIdByFd($fromFd);
+        $fromUserId = get_value_hash_from_redis(RedisKeys::USER_ONLINE_LIST, $fromFd);
 
         // 检查自己是否在群组里
         if (! in_array($fromUserId, $users)) {
@@ -57,9 +54,9 @@ class Group
 
         foreach ($users as $userId) {
 
-            $fd = $this->getFdByUserId($userId);
-            //var_dump("==== fd ==> ", $fd);
-            $server->push($fd, json_encode([
+            $fd = get_value_hash_from_redis(RedisKeys::USER_ONLINE_LIST_REVERSE, $userId);
+
+            $server->push(intval($fd), json_encode([
                 'type'     => 'ws',
                 'category' => 'group',
                 'args'     => [
@@ -69,20 +66,5 @@ class Group
                 ],
             ]));
         }
-    }
-
-    private function getUserIdByFd($fd)
-    {
-        $userId = RedisClient::instance()->doSomething('hget', [RedisKeys::USER_ONLINE_LIST, $fd]);
-
-        return intval($userId);
-    }
-
-    private function getFdByUserId($userId)
-    {
-        //var_dump(" ===> userid ", $userId);
-        $fd = RedisClient::instance()->doSomething('hget', [RedisKeys::USER_ONLINE_LIST_REVERSE, $userId]);
-
-        return intval($fd);
     }
 }
