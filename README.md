@@ -224,6 +224,57 @@ Response:
 }
 ```
 
+#### 获取用户的在线状态
+
+Request:
+
+```json
+{
+	"type": "http",
+	"class": "single",
+	"method": "online",
+	"args": {
+		"user_id": 1
+	}
+}
+```
+
+Response:
+
+```json
+{
+    "code": 200,
+    "message": "获取用户在线状态成功",
+    "data": {
+        "online": true
+    }
+}
+```
+
+#### 获取用户所在的群组列表
+
+Request:
+
+```json
+{
+	"type": "http",
+	"class": "single",
+	"method": "group",
+	"args": {
+		"user_id": 100
+	}
+}
+```
+
+Response:
+
+```json
+{
+    "code": 200,
+    "message": "获取用户所在的群组成功",
+    "data": ["abcdef", "hikjf"]
+}
+```
 
 
 ### WS 接口协议
