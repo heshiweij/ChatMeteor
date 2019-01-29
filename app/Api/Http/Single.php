@@ -43,6 +43,33 @@ class Single
     }
 
     /**
+     * 获取在线用户列表
+     *
+     * @param $args
+     * @return array
+     * @throws \App\Exceptions\BadRequestException
+     * @throws \App\Exceptions\ParameterIllegalException
+     */
+    public function onlineList($args)
+    {
+        $server = $_SERVER['server'];
+
+        $connections = $server->connections;
+
+        $users = [];
+
+        foreach ($connections as $fd) {
+            $userId = get_value_hash_from_redis(RedisKeys::USER_ONLINE_LIST, $fd);
+
+            if (! empty($userId)) {
+                $users[] = $userId;
+            }
+        }
+
+        return ResponseUtil::success('获取在线用户列表成功', $users);
+    }
+
+    /**
      * 获得当前用户所在的群
      *
      * @param $args

@@ -68,6 +68,23 @@ function increase_value_hash_in_redis($hash, $key, $step = 1)
 }
 
 /**
+ * 在 redis 中 hash 的键值对中，删除 key 的键值对
+ *
+ * @param $hash
+ * @param $key
+ * @return
+ * @throws \App\Exceptions\ParameterIllegalException
+ */
+function delete_key_hash_in_redis($hash, $key)
+{
+    if (empty($hash) || empty($key)) {
+        throw new ParameterIllegalException('Params: hash or key is empty', ResponseUtil::HTTP_ERROR);
+    }
+
+    return RedisClient::instance()->doSomething('hdel', [$hash, $key]);
+}
+
+/**
  * 在 redis 的 hash 的键值对中，减少一个 key 的 value 为 value + step
  *
  * @param $hash

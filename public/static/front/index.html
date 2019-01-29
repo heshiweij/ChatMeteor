@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body {
+            font-size: 12px;
+            margin: 0;
+            padding: 0;
+        }
+
+        input {
+            outline: none;
+        }
+
+        #user-id {
+            width: 100px;
+            margin-left: 20px;
+        }
+
+        .login {
+            width: 400px;
+            height: 20px;
+            border: 1px solid black;
+            margin: 20px;
+            padding: 10px 0 10px 0;
+        }
+
+        .box {
+            width: 650px;
+            height: 400px;
+            border: 1px solid red;
+            margin-left: 20px;
+        }
+
+        .content {
+            width: 400px;
+            height: 300px;
+            border: 1px solid black;
+            padding-left: 20px;
+            float: left;
+        }
+
+        .message {
+            width: 400px;
+            float: left;
+            margin-top: 20px;
+            height: 80px;
+            border: 1px solid black;
+        }
+
+        #chat {
+            width: 200px;
+            height: 20px;
+            display: block;
+            float: left;
+            margin-left: 20px;
+            margin-top: 20px;
+        }
+
+        #send {
+            float: left;
+            display: block;
+            width: 50px;
+            height: 25px;
+            margin-top: 20px;
+        }
+
+        .top li {
+            list-style: none;
+            margin-left: 10px;
+        }
+
+        .user {
+            padding: 2px;
+            width: 100px;
+            background: beige;
+            cursor: pointer;
+        }
+
+        .current-user {
+            background: antiquewhite;
+            margin: 0;
+            padding: 0;
+        }
+
+        .group-list {
+            width: 200px;
+            height: 400px;
+            border: 1px solid black;
+            float: right;
+        }
+
+        .group-list ul {
+            list-style: none;
+            padding: 0 0 0 10px;
+        }
+
+        .group-list ul li {
+            width: 100px;
+            background: antiquewhite;
+            margin-top: 5px;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+    </style>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+</head>
+<body>
+
+<div class="login">
+
+    <input type="text" id="user-id" placeholder="请输入用户 ID"/>
+
+    <button id="start">开始</button>
+
+</div>
+
+<div class="top">
+
+    <p style="margin-left: 20px;">
+        在线用户列表（点击即可与其聊天）： <a id="refresh" href="#">刷新</a>
+    </p>
+    <ul id="online-users">
+
+    </ul>
+</div>
+
+<div class="box" style="clear: both">
+
+    <div id="content" class="content">
+        <p class="current-user" id="current-user"></p>
+
+    </div>
+
+    <div class="group-list">
+        在线群组列表（点击群聊）： <a href="#" id="refresh-group-list">刷新</a>
+        <ul id="group-ul">
+        </ul>
+    </div>
+
+    <div class="message">
+        <input type="text" id="chat">
+        <button id="send">发送</button>
+    </div>
+
+</div>
+
+
+<script src="js/jquery-2.1.4.min.js"></script>
+<script type="text/javascript">
+
+    var socket = new WebSocket('ws://47.98.200.20:8000');
+
+    var currentMode = 'single'; // single , group
+    var currentGroupId = '';
+
+    var currentUserId = 0;
+    var myUserId = 0;
+
+    socket.onopen = sOpen;
+    socket.onerror = sError;
+    socket.onmessage = sMessage;
+    socket.onclose = sClose;
+
+    function sOpen() {
+        console.log("open!");
+    }
+
+    function sError(e) {
+        console.log('error!');
+    }
+
+    function sMessage(msg) {
+        var data = JSON.parse(msg.data);
+
+        console.log(data);
+
+        if (data.category == 'single') {
+            appendMessage(data.args.from_user, data.args.message);
+        } else if (data.category == 'group') {
+            appendGroupMessage(data.args.from_group, data.args.from_user, data.args.message);
+        }
+    }
+
+    function appendMessage(fromUser, message) {
+        var html = "<p>用户 " + fromUser + ": " + message + "</p>";
+
+        console.log(html);
+        $('#content').append(html);
+    }
+
+    function appendGroupMessage(fromGroup, fromUser, message) {
+        var html = "<p>群（" + fromGroup + "）用户 " + fromUser + ": " + message + "</p>";
+
+        console.log(html);
+        $('#content').append(html);
+    }
+
+    function sClose(e) {
+        console.log('close!');
+    }
+
+    function Send() {
+        console.log('send!');
+    }
+
+    function Close() {
+        socket.close();
+    }
+
+    $(function () {
+
+        $('#start').click(function () {
+            var useId = $('#user-id').val();
+
+            myUserId = useId;
+
+            socket.send(JSON.stringify({
+                "type": "ws",
+                "class": "setting",
+                "method": "bind",
+                "args": {
+                    "user_id": useId
+                }
+            }));
+
+            var content = {
+                "type": "http",
+                "class": "single",
+                "method": "onlineList",
+                "args": {}
+            };
+
+            // 获取在线用户列表
+            $.ajax({
+                type: "POST",
+                url: "http://47.98.200.20:8000",
+
+                // data sent is json
+                contentType: "application/json",
+                // Post 方式，data参数不能为空""，
+                //如果不传参数，也要写成"{}"，否则contentType将不能附加在Request Headers中。
+                data: JSON.stringify(content),
+                dataType: "json",
+                success: function (result) {
+                    console.log(result);
+                    parseUsers(result.data)
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log('error!');
+                }
+            });
+
+        });
+
+        $('#send').click(function () {
+
+            if (myUserId <= 0) {
+                alert('您还没有加入聊天，请输入您的 ID 加入');
+                return;
+            }
+
+            if (currentMode == 'single') {
+                if (currentUserId <= 0) {
+                    alert('您还没有选择聊天对象');
+                    return;
+                }
+            }
+
+            if (currentMode == 'group') {
+                if (currentGroupId <= 0) {
+                    alert('您还没加入群聊');
+                    return;
+                }
+            }
+
+            var chatMsg = $('#chat').val();
+
+            if (chatMsg.trim() == '') {
+                alert('请输入聊天内容');
+                return
+            }
+
+            if (currentMode == 'single') {
+                socket.send(JSON.stringify({
+                    "type": "ws",
+                    "class": "single",
+                    "method": "send",
+                    "args": {
+                        "to_user": currentUserId,
+                        "message": chatMsg
+                    }
+                }));
+            } else {
+                socket.send(JSON.stringify({
+                    "type": "ws",
+                    "class": "group",
+                    "method": "send",
+                    "args": {
+                        "group_id": currentGroupId,
+                        "message": chatMsg
+                    }
+                }));
+            }
+
+            // 追加内容
+            appendMessageMySelf(chatMsg);
+
+            $('#chat').val('');
+        });
+
+
+        // 获取群组列表
+        $('#refresh-group-list').on('click', function () {
+
+            var content = {
+                "type": "http",
+                "class": "group",
+                "method": "list",
+                "args": {
+                    "is_active": false
+                }
+            };
+
+            // 获取在线用户列表
+            $.ajax({
+                type: "POST",
+                url: "http://47.98.200.20:8000",
+
+                // data sent is json
+                contentType: "application/json",
+                // Post 方式，data参数不能为空""，
+                //如果不传参数，也要写成"{}"，否则contentType将不能附加在Request Headers中。
+                data: JSON.stringify(content),
+                dataType: "json",
+                success: function (result) {
+                    parseGroups(result.data)
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log('error!');
+                }
+            });
+
+        });
+
+        function parseGroups(groups) {
+            $.each(groups, function (index, group) {
+                console.log(group);
+
+                $('#group-ul').html('');
+
+                $('#group-ul').append('<li group-id="' + group.group_id + '">' + group.group_name + '</li>');
+
+                $('#group-ul li').on('click', function () {
+                    var groupId = $(this).attr('group-id');
+
+                    currentGroupId = groupId;
+
+                    // 更改模式
+                    currentMode = 'group';
+
+                });
+            })
+        }
+
+        $('#refresh').on('click', function () {
+
+            var content = {
+                "type": "http",
+                "class": "single",
+                "method": "onlineList",
+                "args": {}
+            };
+
+            // 获取在线用户列表
+            $.ajax({
+                type: "POST",
+                url: "http://47.98.200.20:8000",
+
+                // data sent is json
+                contentType: "application/json",
+                // Post 方式，data参数不能为空""，
+                //如果不传参数，也要写成"{}"，否则contentType将不能附加在Request Headers中。
+                data: JSON.stringify(content),
+                dataType: "json",
+                success: function (result) {
+                    console.log(result);
+                    parseUsers(result.data)
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log('error!');
+                }
+            });
+
+        });
+
+        function appendMessageMySelf(message) {
+            var html = "<p style='text-align: right; padding-right: 20px;'>我: " + message + "</p>";
+
+            console.log(html);
+            $('#content').append(html);
+        }
+
+        function parseUsers(users) {
+
+            console.log(users);
+
+            $('#online-users').html('');
+
+            $.each(users, function (index, value) {
+
+                $('#online-users').append("<li user-id='" + value + "' class='user'> 用户 " + value + " </li>");
+
+                $('#online-users li').unbind('click');
+
+                $('#online-users li').on('click', function () {
+                    var userId = $(this).attr('user-id');
+
+                    currentUserId = userId;
+
+                    // 更改模式
+                    currentMode = 'single';
+
+                    if (myUserId == currentUserId) {
+                        alert('您不能和自己聊天');
+                        return;
+                    }
+
+                    $('#current-user').html('当前正在和 用户' + userId + ' 聊天');
+
+                });
+
+            })
+        }
+
+    });
+
+
+</script>
+
+</body>
+</html>

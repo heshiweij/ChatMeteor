@@ -33,6 +33,13 @@ class Setting
         $fd     = $_SERVER['frame']->fd;
         $userId = $args['user_id'];
 
+        // 清除之前绑定的数据
+        $originUserId = get_value_hash_from_redis(RedisKeys::USER_ONLINE_LIST, $fd);
+
+        if (! empty($originUserId)) {
+            delete_key_hash_in_redis(RedisKeys::USER_ONLINE_LIST_REVERSE, $originUserId);
+        }
+
         // 正向
         set_value_hash_to_redis(RedisKeys::USER_ONLINE_LIST, $fd, $userId);
 

@@ -5,8 +5,8 @@
 #QQ:               137233130
 #Filename:         startup.sh
 #URL:              https://github.com/heshiweij/ChatMeteor
-#Description:      To startup Chat Engine server
-#Copyright:        2018 All Right Reserved
+#Description:      To startup Chat Engine server.
+#Copyright:        2018 All Right Reserved.
 #
 #                        _ooOoo_
 #                         o8888888o
@@ -39,9 +39,11 @@ swoole_major_version=`php -r 'echo SWOOLE_VERSION;'|egrep -o "[[:digit:]]+"|head
 php --ri "swoole" |grep -q 'async redis client => enabled'
 
 if [ $? -ne 0 ]; then
-	echo -e echo -e "\033[31m You must install enable swoole async redis first! \033[0m"
+	echo -e "\033[31m You must install enable swoole async redis first! \033[0m"
 	exit 1
 fi
+
+
 
 # check php version
 php_major_version=`php -v|egrep -o "[[:digit:]]+"|head -1`

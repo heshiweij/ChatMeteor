@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<!-- saved from url=(0080)file:///Users/svenhe/PhpstormProjects/ChatMeteor/public/static/front/index.html# -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <title>Title</title>
+    <style>
+        body {
+            font-size: 12px;
+            margin: 0;
+            padding: 0;
+        }
+
+        input {
+            outline: none;
+        }
+
+        #user-id {
+            width: 100px;
+            margin-left: 20px;
+        }
+
+        .login {
+            width: 400px;
+            height: 20px;
+            border: 1px solid black;
+            margin: 20px;
+            padding: 10px 0 10px 0;
+        }
+
+        .box {
+            width: 400px;
+            height: 400px;
+            /*border: 1px solid black;*/
+            margin-left: 20px;
+        }
+
+        .content {
+            height: 300px;
+            border: 1px solid black;
+            padding-left: 20px;
+        }
+
+        .message {
+            margin-top: 20px;
+            height: 80px;
+            border: 1px solid black;
+        }
+
+        #chat {
+            width: 200px;
+            height: 20px;
+            display: block;
+            float: left;
+            margin-left: 20px;
+            margin-top: 20px;
+        }
+
+        #send {
+            float: left;
+            display: block;
+            width: 50px;
+            height: 25px;
+            margin-top: 20px;
+        }
+
+        .top li {
+            list-style: none;
+            margin-left: 10px;
+        }
+
+        .user {
+            padding: 2px;
+            width: 100px;
+            background: beige;
+            cursor: pointer;
+        }
+
+        .current-user {
+            background: antiquewhite;
+            margin: 0;
+            padding: 0;
+        }
+
+    </style>
+
+</head>
+<body>
+
+<div class="login">
+
+    <input type="text" id="user-id" placeholder="请输入用户 ID">
+
+    <button id="start">开始</button>
+
+</div>
+
+<div class="top">
+
+    <p style="margin-left: 20px;">
+        在线用户列表（点击即可与其聊天）： <a id="refresh" href="file:///Users/svenhe/PhpstormProjects/ChatMeteor/public/static/front/index.html#">刷新</a>
+    </p>
+    <ul id="online-users">
+
+    </ul>
+</div>
+
+<div class="box" style="clear: both">
+
+    <div id="content" class="content">
+        <p class="current-user" id="current-user"></p>
+
+    </div>
+
+    <div class="message">
+        <input type="text" id="chat">
+        <button id="send">发送</button>
+    </div>
+
+</div>
+
+<div>heihei</div>
+
+<script src="./Title_files/jquery-2.1.4.min.js"></script>
+<script type="text/javascript">
+
+    var socket = new WebSocket('ws://10.1.195.188:8000');
+
+    var currentUserId = 0;
+    var myUserId = 0;
+
+    socket.onopen = sOpen;
+    socket.onerror = sError;
+    socket.onmessage = sMessage;
+    socket.onclose = sClose;
+
+    function sOpen() {
+        console.log("open!");
+    }
+
+    function sError(e) {
+        console.log('error!');
+    }
+
+    function sMessage(msg) {
+        var data = JSON.parse(msg.data);
+
+        console.log(data);
+        appendMessage(data.args.from_user, data.args.message);
+    }
+
+    function appendMessage(fromUser, message) {
+        var html = "<p>用户 " + fromUser + ": " + message + "</p>";
+
+        console.log(html);
+        $('#content').append(html);
+    }
+
+    function sClose(e) {
+        console.log('close!');
+    }
+
+    function Send() {
+        console.log('send!');
+    }
+
+    function Close() {
+        socket.close();
+    }
+
+    $(function () {
+
+        $('#start').click(function () {
+            var useId = $('#user-id').val();
+
+            myUserId = useId;
+
+            socket.send(JSON.stringify({
+                "type": "ws",
+                "class": "setting",
+                "method": "bind",
+                "args": {
+                    "user_id": useId
+                }
+            }));
+
+            var content = {
+                "type": "http",
+                "class": "single",
+                "method": "onlineList",
+                "args": {}
+            };
+
+            // 获取在线用户列表
+            $.ajax({
+                type: "POST",
+                url: "http://10.1.195.188:8000",
+
+                // data sent is json
+                contentType: "application/json",
+                // Post 方式，data参数不能为空""，
+                //如果不传参数，也要写成"{}"，否则contentType将不能附加在Request Headers中。
+                data: JSON.stringify(content),
+                dataType: "json",
+                success: function (result) {
+                    console.log(result);
+                    parseUsers(result.data)
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log('error!');
+                }
+            });
+
+        });
+
+        $('#send').click(function () {
+
+            if (currentUserId <= 0) {
+                alert('您还没有加入聊天，请输入您的 ID 加入');
+                return;
+            }
+
+            if (currentUserId <= 0) {
+                alert('您还没有选择聊天对象');
+                return;
+            }
+
+
+            var chatMsg = $('#chat').val();
+
+            if (chatMsg.trim() == '') {
+                alert('请输入聊天内容');
+                return
+            }
+
+            socket.send(JSON.stringify({
+                "type": "ws",
+                "class": "single",
+                "method": "send",
+                "args": {
+                    "to_user": currentUserId,
+                    "message": chatMsg
+                }
+            }));
+
+            // 追加内容
+            appendMessageMySelf(chatMsg);
+
+            $('#chat').val('');
+        });
+
+        $('#refresh').on('click', function () {
+
+            var content = {
+                "type": "http",
+                "class": "single",
+                "method": "onlineList",
+                "args": {}
+            };
+
+            // 获取在线用户列表
+            $.ajax({
+                type: "POST",
+                url: "http://10.1.195.188:8000",
+
+                // data sent is json
+                contentType: "application/json",
+                // Post 方式，data参数不能为空""，
+                //如果不传参数，也要写成"{}"，否则contentType将不能附加在Request Headers中。
+                data: JSON.stringify(content),
+                dataType: "json",
+                success: function (result) {
+                    console.log(result);
+                    parseUsers(result.data)
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log('error!');
+                }
+            });
+
+        });
+
+        function appendMessageMySelf(message) {
+            var html = "<p style='text-align: right; padding-right: 20px;'>我: " + message + "</p>";
+
+            console.log(html);
+            $('#content').append(html);
+        }
+
+        function parseUsers(users) {
+
+            console.log(users);
+
+            $('#online-users').html('');
+
+            $.each(users, function (index, value) {
+
+                $('#online-users').append("<li user-id='" + value + "' class='user'> 用户 " + value + " </li>");
+
+                $('#online-users li').unbind('click');
+
+                $('#online-users li').on('click', function () {
+                    var userId = $(this).attr('user-id');
+
+                    currentUserId = userId;
+
+                    if (myUserId == currentUserId) {
+                        alert('您不能和自己聊天');
+                        return;
+                    }
+
+                    $('#current-user').html('当前正在和 用户' + userId + ' 聊天');
+
+                });
+
+            })
+        }
+
+    });
+
+
+</script>
+
+
+</body></html>
